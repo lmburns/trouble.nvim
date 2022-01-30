@@ -272,4 +272,10 @@ function Trouble.get_items()
   end
 end
 
+function Trouble.update_selected_item()
+  if view then
+    view:update_selected_item()
+  end
+end
+
 return Trouble
