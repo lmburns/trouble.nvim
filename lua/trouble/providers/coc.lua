@@ -17,10 +17,11 @@ local function is_ready(feature)
   return true
 end
 
-function M.workspace_diagnostics(_, bufnr, cb, _)
+function M.diagnostics(_, bufnr, cb, options)
   local items = {}
 
   local raw = vim.fn["coc#rpc#request"]("diagnosticList", {})
+  local current_file = vim.api.nvim_buf_get_name(bufnr)
 
   -- type reference: https://github.com/neoclide/coc.nvim/blob/87239c26f7c2f75266bf04ce2c9a314063e4d935/typings/index.d.ts#L7822
   -- @table item
@@ -56,6 +57,10 @@ function M.workspace_diagnostics(_, bufnr, cb, _)
       item.message = item.message or line or ""
     end
 
+    if options.mode == "coc_document_diagnostics" and current_file ~= item.file then
+      goto continue
+    end
+
     table.insert(items, {
       bufnr = bufnr,
       filename = item.file,
@@ -72,6 +77,8 @@ function M.workspace_diagnostics(_, bufnr, cb, _)
       source = item.source,
       severity = item.level or 0,
     })
+
+    ::continue::
   end
 
   cb(items)
