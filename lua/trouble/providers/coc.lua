@@ -69,7 +69,7 @@ function M.diagnostics(_, bufnr, cb, options)
       start = start,
       finish = finish,
       sign = vim.fn.sign_getdefined("Coc" .. item.severity)[1]["text"],
-      sign_hl = "Coc" .. item.severity .. "Sign",
+      sign_hl = ("Coc%sSign"):format(item.severity),
       text = vim.trim(item.message:gsub("[\n]", "")):sub(0, vim.o.columns),
       full_text = vim.trim(item.message),
       type = util.severity[item.level] or util.severity[0],

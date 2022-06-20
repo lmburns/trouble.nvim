@@ -156,6 +156,11 @@ function M.process_item(item, bufnr)
   ---@class Item
   ---@field is_file boolean
   ---@field fixed boolean
+  ---@field full_text string
+  ---@field filename string
+  ---@field bufnr number
+  ---@field start table
+  ---@field finish table
   local ret
   ret = {
     bufnr = bufnr,
