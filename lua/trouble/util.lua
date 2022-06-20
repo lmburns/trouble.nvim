@@ -16,7 +16,7 @@ function M.jump_to_item(win, precmd, item)
 
   -- The buffer needs to be loaded if it isn't already
   item.bufnr = fn.bufadd(item.filename)
-  vim.bo[item.bufnr].buflisted = true
+  api.nvim_buf_set_option(item.bufnr, "buflisted", true)
 
   if api.nvim_buf_get_option(item.bufnr, "buflisted") == false then
     vim.cmd("edit #" .. item.bufnr)
@@ -74,34 +74,6 @@ function M.debug(msg, echo)
       vim.notify(msg, vim.log.levels.DEBUG, { title = "Trouble" })
     end
   end
-end
-
----Print a value in lua
-function M.inspect(v)
-    local s
-    local t = type(v)
-    if t == "nil" then
-        s = "nil"
-    elseif t == "userdata" then
-        s = ("Userdata:\n%s"):format(vim.inspect(getmetatable(v)))
-    elseif t ~= "string" then
-        s = vim.inspect(v, {depth = math.huge})
-    else
-        s = tostring(v)
-    end
-    return s
-end
-
----Print text nicely
-function M.p(...)
-    local argc = select("#", ...)
-    local msg_tbl = {}
-    for i = 1, argc do
-        local arg = select(i, ...)
-        table.insert(msg_tbl, M.inspect(arg))
-    end
-
-    print(table.concat(msg_tbl, " "))
 end
 
 function M.debounce(ms, fn)

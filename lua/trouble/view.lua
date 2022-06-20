@@ -187,15 +187,15 @@ function View:setup(opts)
   )
 
   if config.options.track_cursor then
-      vim.api.nvim_exec(
-        [[
+    vim.api.nvim_exec(
+      [[
           augroup TroubleTrackCursor
             autocmd!
             autocmd CursorMoved * lua require("trouble").update_selected_item()
           augroup END
         ]],
-        false
-      )
+      false
+    )
   end
 
   if not opts.parent then
@@ -510,6 +510,9 @@ function View:_preview()
   util.debug("preview")
 
   if item.is_file ~= true then
+    item.bufnr = fn.bufadd(item.filename)
+    vim.api.nvim_buf_set_option(item.bufnr, "buflisted", true)
+
     vim.api.nvim_win_set_buf(self.parent, item.bufnr)
     vim.api.nvim_win_set_cursor(self.parent, { item.start.line + 1, item.start.character })
 
