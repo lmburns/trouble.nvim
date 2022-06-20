@@ -1,6 +1,9 @@
+local M = {}
+
 local config = require("trouble.config")
 
-local M = {}
+local api = vim.api
+local fn = vim.fn
 
 function M.jump_to_item(win, precmd, item)
   -- requiring here, as otherwise we run into a circular dependency
@@ -10,13 +13,20 @@ function M.jump_to_item(win, precmd, item)
   if precmd then
     vim.cmd(precmd)
   end
-  if vim.api.nvim_buf_get_option(item.bufnr, "buflisted") == false then
+
+  -- The buffer needs to be loaded if it isn't already
+  item.bufnr = fn.bufadd(item.filename)
+  vim.bo[item.bufnr].buflisted = true
+
+  if api.nvim_buf_get_option(item.bufnr, "buflisted") == false then
     vim.cmd("edit #" .. item.bufnr)
   else
     vim.cmd("buffer " .. item.bufnr)
   end
 
-  vim.api.nvim_win_set_cursor(vim.F.if_nil(win, 0), { item.start.line + 1, item.start.character })
+  M.debug(item, true)
+
+  api.nvim_win_set_cursor(vim.F.if_nil(win, 0), { item.start.line, item.start.character })
 end
 
 function M.fix_mode(opts)
@@ -55,10 +65,43 @@ function M.error(msg)
   vim.notify(msg, vim.log.levels.ERROR, { title = "Trouble" })
 end
 
-function M.debug(msg)
+function M.debug(msg, echo)
   if config.options.debug then
-    vim.notify(msg, vim.log.levels.DEBUG, { title = "Trouble" })
+    if echo then
+      -- api.nvim_echo({ { msg, "WarningMsg" } }, false, {})
+      vim.pretty_print(msg)
+    else
+      vim.notify(msg, vim.log.levels.DEBUG, { title = "Trouble" })
+    end
   end
+end
+
+---Print a value in lua
+function M.inspect(v)
+    local s
+    local t = type(v)
+    if t == "nil" then
+        s = "nil"
+    elseif t == "userdata" then
+        s = ("Userdata:\n%s"):format(vim.inspect(getmetatable(v)))
+    elseif t ~= "string" then
+        s = vim.inspect(v, {depth = math.huge})
+    else
+        s = tostring(v)
+    end
+    return s
+end
+
+---Print text nicely
+function M.p(...)
+    local argc = select("#", ...)
+    local msg_tbl = {}
+    for i = 1, argc do
+        local arg = select(i, ...)
+        table.insert(msg_tbl, M.inspect(arg))
+    end
+
+    print(table.concat(msg_tbl, " "))
 end
 
 function M.debounce(ms, fn)
@@ -119,7 +162,7 @@ end
 
 function M.process_item(item, bufnr)
   bufnr = bufnr or item.bufnr
-  local filename = vim.api.nvim_buf_get_name(bufnr)
+  local filename = api.nvim_buf_get_name(bufnr)
   local uri = vim.uri_from_bufnr(bufnr)
   local range = item.range or item.targetSelectionRange
 
@@ -148,7 +191,7 @@ function M.process_item(item, bufnr)
     else
       -- load the buffer when needed
       vim.fn.bufload(bufnr)
-      line = (vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false) or { "" })[1]
+      line = (api.nvim_buf_get_lines(bufnr, row, row + 1, false) or { "" })[1]
     end
 
     item.message = item.message or line or ""
@@ -203,9 +246,9 @@ end
 
 -- @private
 local function make_position_param(win, buf)
-  local row, col = unpack(vim.api.nvim_win_get_cursor(win))
+  local row, col = unpack(api.nvim_win_get_cursor(win))
   row = row - 1
-  local line = vim.api.nvim_buf_get_lines(buf, row, row + 1, true)[1]
+  local line = api.nvim_buf_get_lines(buf, row, row + 1, true)[1]
   if not line then
     return { line = 0, character = 0 }
   end

@@ -1,5 +1,9 @@
 # 🚦 Trouble
 
+### Fork
+- Supports [`coc.nvim`](https://github.com/neoclide/coc.nvim)
+- Fixed the error `Cursor position outside buffer` by loading the buffer beforehand
+
 A pretty list for showing diagnostics, references, telescope results, quickfix and location lists to help you solve all the trouble your code is causing.
 
 ![LSP Trouble Screenshot](./media/shot.png)
