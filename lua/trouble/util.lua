@@ -26,7 +26,7 @@ function M.jump_to_item(win, precmd, item)
 
   M.debug(item, true)
 
-  api.nvim_win_set_cursor(vim.F.if_nil(win, 0), { item.start.line, item.start.character })
+  api.nvim_win_set_cursor(win or 0, { item.start.line, item.start.character })
 end
 
 function M.fix_mode(opts)

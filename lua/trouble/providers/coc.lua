@@ -1,6 +1,9 @@
+local M = {}
+
 local util = require("trouble.util")
 
-local M = {}
+local fn = vim.fn
+local api = vim.api
 
 local function is_ready(feature)
   feature = string.sub(feature, 0, -2)
@@ -9,7 +12,7 @@ local function is_ready(feature)
     return false
   end
 
-  if feature and not vim.fn.CocHasProvider(feature) then
+  if feature and not fn.CocHasProvider(feature) then
     util.error("Coc: language server does not support " .. feature .. " provider")
     return false
   end
@@ -20,8 +23,8 @@ end
 function M.diagnostics(_, bufnr, cb, options)
   local items = {}
 
-  local raw = vim.fn["coc#rpc#request"]("diagnosticList", {})
-  local current_file = vim.api.nvim_buf_get_name(bufnr)
+  local raw = fn["coc#rpc#request"]("diagnosticList", {})
+  local current_file = api.nvim_buf_get_name(bufnr)
 
   -- type reference: https://github.com/neoclide/coc.nvim/blob/87239c26f7c2f75266bf04ce2c9a314063e4d935/typings/index.d.ts#L7822
   -- @table item
@@ -52,8 +55,8 @@ function M.diagnostics(_, bufnr, cb, options)
     local col = start.character
 
     if not item.message then
-      vim.fn.bufload(bufnr)
-      local line = (vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false) or { "" })[1]
+      fn.bufload(bufnr)
+      local line = (api.nvim_buf_get_lines(bufnr, row, row + 1, false) or { "" })[1]
       item.message = item.message or line or ""
     end
 
@@ -68,7 +71,7 @@ function M.diagnostics(_, bufnr, cb, options)
       col = col + 1,
       start = start,
       finish = finish,
-      sign = vim.fn.sign_getdefined("Coc" .. item.severity)[1]["text"],
+      sign = fn.sign_getdefined("Coc" .. item.severity)[1]["text"],
       sign_hl = ("Coc%sSign"):format(item.severity),
       text = vim.trim(item.message:gsub("[\n]", "")):sub(0, vim.o.columns),
       full_text = vim.trim(item.message),
@@ -85,7 +88,7 @@ function M.diagnostics(_, bufnr, cb, options)
 end
 
 local function to_items(win, method, opts)
-  vim.fn.win_gotoid(win)
+  fn.win_gotoid(win)
 
   if not is_ready(method) then
     return {}
@@ -93,9 +96,9 @@ local function to_items(win, method, opts)
 
   local items = {}
 
-  vim.fn.CocAction("ensureDocument")
+  fn.CocAction("ensureDocument")
 
-  local raw = vim.fn["coc#rpc#request"](method, opts.args or {})
+  local raw = fn["coc#rpc#request"](method, opts.args or {})
 
   if not type(raw) == "table" then
     return {}
@@ -109,8 +112,8 @@ local function to_items(win, method, opts)
 
     local item_bufnr = vim.uri_to_bufnr(item.uri)
     local item_fname = vim.uri_to_fname(item.uri)
-    vim.fn.bufload(item_bufnr)
-    local line = vim.api.nvim_buf_get_lines(item_bufnr, row, row + 1, false)[1] or "Text not available!"
+    fn.bufload(item_bufnr)
+    local line = api.nvim_buf_get_lines(item_bufnr, row, row + 1, false)[1] or "Text not available!"
 
     table.insert(items, {
       bufnr = item_bufnr,

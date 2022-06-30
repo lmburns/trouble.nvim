@@ -376,9 +376,11 @@ end
 function View:get_cursor()
   return vim.api.nvim_win_get_cursor(self.win)
 end
+
 function View:get_line()
   return self:get_cursor()[1]
 end
+
 function View:get_col()
   return self:get_cursor()[2]
 end
@@ -510,6 +512,7 @@ function View:_preview()
   util.debug("preview")
 
   if item.is_file ~= true then
+    -- TODO: (Maybe) could delete the opened buffers when exiting
     item.bufnr = fn.bufadd(item.filename)
     vim.api.nvim_buf_set_option(item.bufnr, "buflisted", true)
 
